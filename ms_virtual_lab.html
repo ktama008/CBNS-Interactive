@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MS Virtual Lab — CBNS 106</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #e2e0d8;
+    --border2: #ccc9bd;
+    --text: #1a1916;
+    --text2: #6b6860;
+    --text3: #9b9890;
+    --purple: #534AB7;
+    --purple-light: #EEEDFE;
+    --purple-mid: #AFA9EC;
+    --teal: #0F6E56;
+    --teal-light: #E1F5EE;
+    --amber: #854F0B;
+    --amber-light: #FAEEDA;
+    --coral: #712B13;
+    --coral-light: #FAECE7;
+    --green: #1D9E75;
+    --red: #E24B4A;
+    --blue: #378ADD;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* ── Header ── */
+  .page-header {
+    width: 100%;
+    max-width: 780px;
+    margin-bottom: 2rem;
+  }
+  .course-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: .5rem;
+  }
+  .page-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: .4rem;
+  }
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--text2);
+  }
+  .title-rule {
+    height: 3px;
+    background: var(--purple);
+    width: 48px;
+    margin-top: .875rem;
+    border-radius: 2px;
+  }
+
+  /* ── Card shell ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 780px;
+    overflow: hidden;
+  }
+
+  /* ── Screens ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Experiment grid ── */
+  .grid-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 1.5rem 1.5rem .75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .exp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .exp-card {
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+    position: relative;
+  }
+  .exp-card:nth-child(2n) { border-right: none; }
+  .exp-card:nth-child(3), .exp-card:nth-child(4) { border-bottom: none; }
+  .exp-card:hover { background: var(--surface2); }
+  .exp-card.selected {
+    background: var(--purple-light);
+    border-color: var(--purple-mid);
+  }
+  .exp-card.selected::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--purple);
+    border-radius: 0;
+  }
+  .exp-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-bottom: .6rem;
+  }
+  .badge-a { background: #EEEDFE; color: #3C3489; }
+  .badge-b { background: #E1F5EE; color: #085041; }
+  .badge-c { background: #FAEEDA; color: #633806; }
+  .badge-d { background: #FAECE7; color: #712B13; }
+  .exp-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: .25rem;
+  }
+  .exp-tech {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: .5rem;
+  }
+  .exp-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.55;
+  }
+  .card-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    background: var(--surface2);
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0 1.25rem;
+    height: 38px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .12s, opacity .12s;
+  }
+  .btn-primary:hover { background: #3C3489; }
+  .btn-primary:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-ghost {
+    background: none;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 0 1rem;
+    height: 34px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: background .12s, border-color .12s;
+  }
+  .btn-ghost:hover { background: var(--surface2); border-color: var(--text3); }
+  .btn-run {
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    width: 100%;
+    height: 42px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .12s;
+    letter-spacing: .01em;
+  }
+  .btn-run:hover { background: #3C3489; }
+
+  /* ── Intro screen ── */
+  .intro-body { padding: 1.5rem; }
+  .intro-text {
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .intro-text b { font-weight: 600; }
+  .rq-block {
+    border-left: 3px solid var(--purple);
+    padding: .875rem 1rem;
+    background: var(--purple-light);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    margin-bottom: 1rem;
+  }
+  .rq-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--purple);
+    margin-bottom: .35rem;
+  }
+  .rq-text {
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .cite-line {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: .5rem;
+  }
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  /* ── Run screen ── */
+  .run-body { padding: 1.5rem; }
+  .chart-wrap {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+  }
+  canvas { display: block; width: 100%; height: auto; }
+
+  /* ── Data table ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .data-table th {
+    background: var(--surface2);
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .data-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:nth-child(even) td { background: #fafaf8; }
+  .pval { font-family: var(--mono); font-size: 12px; }
+
+  /* ── Methods note ── */
+  .methods-note {
+    font-size: 11.5px;
+    color: var(--text3);
+    font-family: var(--mono);
+    line-height: 1.6;
+    padding: .75rem 1rem;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+  }
+
+  /* ── Done screen ── */
+  .done-body {
+    padding: 3rem 1.5rem;
+    text-align: center;
+  }
+  .done-icon {
+    font-size: 36px;
+    margin-bottom: 1rem;
+  }
+  .done-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: .5rem;
+  }
+  .done-sub {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.65;
+    max-width: 340px;
+    margin: 0 auto 1.5rem;
+  }
+
+  /* ── Progress dots ── */
+  .progress {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .pdot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--border2);
+  }
+  .pdot.done { background: var(--purple); }
+  .pdot.cur { background: var(--purple); box-shadow: 0 0 0 2px var(--purple-mid); }
+
+  @media (max-width: 560px) {
+    .exp-grid { grid-template-columns: 1fr; }
+    .exp-card { border-right: none; }
+    .exp-card:nth-child(4) { border-bottom: none; }
+    .exp-card:nth-child(3) { border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="course-label">CBNS 106 — Introduction to Neuroscience</div>
+  <div class="page-title">MS Virtual Lab</div>
+  <div class="page-subtitle">Multiple Sclerosis — Design &amp; Run Your Experiment</div>
+  <div class="title-rule"></div>
+</div>
+
+<div class="card">
+
+  <!-- SCREEN 1: MENU -->
+  <div class="screen active" id="s-menu">
+    <div class="grid-label">Select one experiment to run</div>
+    <div class="exp-grid">
+      <div class="exp-card" id="c0" onclick="pick(0)">
+        <span class="exp-badge badge-a">Experiment A</span>
+        <div class="exp-name">MBP Immunofluorescence</div>
+        <div class="exp-tech">Confocal microscopy · fluorescence quantification</div>
+        <div class="exp-desc">Measure myelin loss in EAE spinal cord tissue using a fluorescent anti-MBP antibody.</div>
+      </div>
+      <div class="exp-card" id="c1" onclick="pick(1)">
+        <span class="exp-badge badge-b">Experiment B</span>
+        <div class="exp-name">Flow Cytometry</div>
+        <div class="exp-tech">Intracellular cytokine staining · PBMC</div>
+        <div class="exp-desc">Measure % IFN-γ+ CD4+ Th1 cells in peripheral blood of RRMS patients vs. healthy controls.</div>
+      </div>
+      <div class="exp-card" id="c2" onclick="pick(2)">
+        <span class="exp-badge badge-c">Experiment C</span>
+        <div class="exp-name">scRNA-seq</div>
+        <div class="exp-tech">Single-cell RNA sequencing · differential expression</div>
+        <div class="exp-desc">Compare glial gene expression in MS white matter lesions vs. normal-appearing white matter.</div>
+      </div>
+      <div class="exp-card" id="c3" onclick="pick(3)">
+        <span class="exp-badge badge-d">Experiment D</span>
+        <div class="exp-name">Patch Clamp</div>
+        <div class="exp-tech">Whole-cell patch clamp · electrophysiology</div>
+        <div class="exp-desc">Record action potential properties in demyelinated vs. healthy neurons to assess conduction deficits.</div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <button class="btn-primary" id="menu-next" onclick="goIntro()" disabled>Continue →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: INTRO -->
+  <div class="screen" id="s-intro">
+    <div class="intro-body">
+      <div class="intro-text" id="intro-body"></div>
+      <div class="rq-block">
+        <div class="rq-label">Research question</div>
+        <div class="rq-text" id="rq-body"></div>
+        <div class="cite-line" id="cite-body"></div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-ghost" onclick="show('s-menu')">← Back</button>
+      <div class="progress">
+        <div class="pdot done"></div>
+        <div class="pdot cur"></div>
+        <div class="pdot"></div>
+        <div class="pdot"></div>
+      </div>
+      <button class="btn-primary" onclick="show('s-run')">Run experiment →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: RUN -->
+  <div class="screen" id="s-run">
+    <div class="run-body">
+      <button class="btn-run" id="run-btn" onclick="runExp()">Run experiment</button>
+      <div id="result-area" style="display:none">
+        <div style="height:1rem"></div>
+        <div class="chart-wrap"><canvas id="exp-canvas" height="240"></canvas></div>
+        <table class="data-table" id="data-table"></table>
+        <div class="methods-note" id="note-text"></div>
+      </div>
+    </div>
+    <div class="nav-row" id="run-nav" style="display:none">
+      <button class="btn-ghost" onclick="show('s-intro')">← Back</button>
+      <div class="progress">
+        <div class="pdot done"></div>
+        <div class="pdot done"></div>
+        <div class="pdot cur"></div>
+        <div class="pdot"></div>
+      </div>
+      <button class="btn-primary" onclick="show('s-done')">Done →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: DONE -->
+  <div class="screen" id="s-done">
+    <div class="done-body">
+      <div class="done-icon">🔬</div>
+      <div class="done-title">Lab complete</div>
+      <div class="done-sub">Record your results in your assignment worksheet and use them to complete Parts 4–6.</div>
+      <button class="btn-run" style="max-width:220px;margin:0 auto;display:block" onclick="restart()">Run another experiment</button>
+    </div>
+  </div>
+
+</div><!-- .card -->
+
+<script>
+const EXPS = [
+  {
+    name: "MBP Immunofluorescence",
+    rq: "Does EAE-induced demyelination significantly reduce MBP fluorescence intensity in spinal cord white matter compared to healthy controls?",
+    cite: "📄 Haase & Linker (2021) Ther Adv Neurol Disord 14:17562864211007687",
+    intro: `<b>What is MBP immunofluorescence?</b><br><br>
+Myelin Basic Protein (MBP) is a major structural component of the myelin sheath. In MS, the immune system destroys myelin — a process called <b>demyelination</b> — leaving axons exposed and functionally impaired.<br><br>
+Spinal cord tissue sections from EAE mice are stained with a fluorescent anti-MBP antibody and imaged by confocal microscopy. Healthy tissue shows dense, uniform staining. Demyelinated lesion areas show patchy or absent signal.<br><br>
+<b>Model:</b> EAE C57BL/6 mice induced by MOG<sub>35–55</sub> peptide.<br>
+<b>Output:</b> Mean fluorescence intensity (MFI) in arbitrary units (a.u.) per mm² of white matter.`,
+    run() {
+      const n = 10, cM = 1820, eM = 1820 * 0.42, sd = 160;
+      const c = arr(n, () => Math.max(200, cM + rn() * sd));
+      const e = arr(n, () => Math.max(100, eM + rn() * sd * 0.9));
+      const ma = mn(c), mb = mn(e), p = pv2(c, e);
+      return {
+        groups: ['Healthy control', 'EAE'],
+        colors: ['#378ADD', '#E24B4A'],
+        datasets: [c, e], ma, mb, p,
+        yLbl: 'MBP fluorescence intensity (a.u.)',
+        tableRows: [
+          ['Group', 'n', 'Mean MFI (a.u.)', 'SD'],
+          ['Healthy control', '10', ma.toFixed(0), std(c).toFixed(0)],
+          ['EAE', '10', mb.toFixed(0), std(e).toFixed(0)],
+          ['% change', '—', pct(ma, mb), '—'],
+          ['p-value', '—', fmtP(p), '—'],
+        ],
+        note: 'n = 10 animals per group. MFI measured across 5 tissue sections per animal. Error bars = SEM.'
+      };
+    }
+  },
+  {
+    name: "Flow Cytometry",
+    rq: "Are CD4+ Th1 cells (IFN-γ+) significantly more abundant in the peripheral blood of active RRMS patients compared to healthy controls?",
+    cite: "📄 Arbour et al. (2003) J Neuroimmunol 137:197–209 · Kaskow & Baecher-Allan (2018) Cold Spring Harb Perspect Med 8:a029025",
+    intro: `<b>What is intracellular cytokine flow cytometry?</b><br><br>
+In MS, CD4+ Th1 helper T-cells producing <b>IFN-γ</b> are key drivers of inflammatory demyelination. Flow cytometry lets us count these cells at the single-cell level in peripheral blood.<br><br>
+PBMCs are isolated from patient blood, stimulated with PMA and ionomycin, then treated with brefeldin A to trap cytokines inside cells. Cells are stained with fluorescent antibodies against CD4 (surface) and IFN-γ (intracellular), then passed through a laser — one cell at a time — producing a fluorescence readout for each.<br><br>
+<b>Subjects:</b> Active RRMS patients (confirmed relapse within 30 days) vs. age-matched healthy controls.<br>
+<b>Output:</b> % of CD4+ T cells that are IFN-γ positive.`,
+    run() {
+      const n = 12, cM = 4.2, eM = 14.8, sdC = 1.2, sdE = 3.1;
+      const c = arr(n, () => Math.max(0.5, cM + rn() * sdC));
+      const e = arr(n, () => Math.max(1, eM + rn() * sdE));
+      const ma = mn(c), mb = mn(e), p = pv2(c, e);
+      return {
+        groups: ['Healthy control', 'Active RRMS'],
+        colors: ['#378ADD', '#E24B4A'],
+        datasets: [c, e], ma, mb, p,
+        yLbl: '% IFN-γ+ cells within CD4+ T cells',
+        tableRows: [
+          ['Group', 'n', 'Mean % IFN-γ+', 'SD'],
+          ['Healthy control', '12', ma.toFixed(1) + '%', std(c).toFixed(1)],
+          ['Active RRMS', '12', mb.toFixed(1) + '%', std(e).toFixed(1)],
+          ['% change', '—', pct(ma, mb), '—'],
+          ['p-value', '—', fmtP(p), '—'],
+        ],
+        note: 'PBMCs stimulated with PMA/ionomycin + brefeldin A for 5 h. Gated on CD3+CD4+ lymphocytes. % IFN-γ+ calculated above unstimulated background. n = 12 subjects per group.'
+      };
+    }
+  },
+  {
+    name: "scRNA-seq",
+    rq: "Are oligodendrocyte remyelination genes downregulated in the white matter of MS patients compared to normal-appearing white matter?",
+    cite: "📄 Macnair et al. (2025) Neuron 113:396–410",
+    intro: `<b>What is single-cell RNA sequencing?</b><br><br>
+RNA sequencing measures which genes are active by capturing messenger RNA transcripts. <b>Single-cell RNA-seq (scRNA-seq)</b> does this at the level of individual cells, revealing differences that would be averaged away in bulk tissue analysis.<br><br>
+Post-mortem brain tissue is dissociated into single nuclei, each barcoded and sequenced. Expression levels are reported as <b>log₂ CPM</b> (normalized transcript counts). Macnair et al. (2025) used this approach to show that MS patients stratify into distinct glial subtypes based on white matter gene expression.<br><br>
+<b>Tissue:</b> MS white matter lesions vs. normal-appearing white matter (NAWM) from same patients.<br>
+<b>Genes shown:</b> MBP, OLIG2, PDGFRA (oligodendrocyte/OPC markers) and GFAP, VIM (reactive astrocyte markers).<br>
+<b>Output:</b> Mean log₂ CPM per group per gene.`,
+    run() {
+      const genes = ['MBP', 'OLIG2', 'PDGFRA', 'GFAP', 'VIM'];
+      const nawm = [8.2, 6.4, 5.1, 4.8, 5.2];
+      const lesion = [6.4, 5.2, 4.2, 6.9, 6.8];
+      const n = 15, sd = 0.65;
+      const d0 = arr(n, () => nawm[0] + rn() * sd);
+      const d1 = arr(n, () => lesion[0] + rn() * sd);
+      const ma = mn(d0), mb = mn(d1), p = pv2(d0, d1);
+      const rows = [['Gene', 'NAWM mean', 'Lesion mean', 'Direction']];
+      genes.forEach((g, i) => {
+        rows.push([g, nawm[i].toFixed(1), lesion[i].toFixed(1), lesion[i] > nawm[i] ? '↑ in lesion' : '↓ in lesion']);
+      });
+      rows.push(['p-value (MBP)', '—', fmtP(p), '—']);
+      return {
+        groups: ['NAWM', 'MS lesion'],
+        colors: ['#1D9E75', '#E24B4A'],
+        allGenes: genes, nawmVals: nawm, lesionVals: lesion,
+        datasets: [d0, d1], ma, mb, p,
+        isMultiGene: true,
+        yLbl: 'Expression (log₂ CPM)',
+        tableRows: rows,
+        note: 'Expression normalized to log₂ CPM. n = 15 patient samples per group. MBP bar chart shown above; full gene panel in table. p-value calculated for MBP only.'
+      };
+    }
+  },
+  {
+    name: "Patch Clamp",
+    rq: "Is action potential conduction velocity significantly reduced in demyelinated neurons compared to healthy controls?",
+    cite: "📄 Waxman (2006) Nat Rev Neurosci 7:932–41 · Felts, Baker & Smith (1997) J Neurosci 17:7267–77",
+    intro: `<b>What is patch clamp electrophysiology?</b><br><br>
+The <b>patch clamp</b> technique uses a glass micropipette pressed against a neuron's membrane to form a tight gigaohm seal. In whole-cell mode, the pipette breaks through the membrane, allowing direct measurement of a neuron's electrical activity.<br><br>
+In healthy myelinated axons, action potentials jump rapidly between nodes of Ranvier — <b>saltatory conduction</b> — achieving velocities of 40–70 m/s. When myelin is lost, conduction slows dramatically as the signal must travel continuously along the bare membrane (Felts et al., 1997).<br><br>
+Waxman (2006) showed that redistribution of Na⁺ channels along demyelinated internodes provides partial compensation, allowing some conduction at reduced velocity.<br><br>
+<b>Model:</b> Cuprizone-fed mice (6 weeks) vs. naïve controls.<br>
+<b>Output:</b> Conduction velocity (m/s) and threshold current (pA).`,
+    run() {
+      const n = 15;
+      const c = arr(n, () => Math.max(5, 48 + rn() * 5));
+      const e = arr(n, () => Math.max(3, 13 + rn() * 3.5));
+      const ct = arr(n, () => Math.max(60, 120 + rn() * 18));
+      const et = arr(n, () => Math.max(80, 210 + rn() * 25));
+      const ma = mn(c), mb = mn(e), p = pv2(c, e);
+      const maT = mn(ct), mbT = mn(et), pT = pv2(ct, et);
+      return {
+        groups: ['Healthy', 'Demyelinated'],
+        colors: ['#1D9E75', '#E24B4A'],
+        datasets: [c, e], ma, mb, p,
+        yLbl: 'Conduction velocity (m/s)',
+        tableRows: [
+          ['Measurement', 'Healthy (mean)', 'Demyelinated (mean)', 'p-value'],
+          ['Conduction velocity (m/s)', ma.toFixed(1), mb.toFixed(1), fmtP(p)],
+          ['% velocity reduction', '—', pct(ma, mb), '—'],
+          ['Threshold current (pA)', maT.toFixed(0), mbT.toFixed(0), fmtP(pT)],
+        ],
+        note: 'Whole-cell patch clamp from dorsal column neurons. Conduction velocity = distance (10 mm) ÷ AP latency. n = 15 neurons per group.'
+      };
+    }
+  }
+];
+
+// ── Math helpers ──
+let sel = null;
+function rn() { let u=0,v=0; while(!u) u=Math.random(); while(!v) v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function arr(n, f) { return Array.from({length: n}, f); }
+function mn(a) { return a.reduce((s,x) => s+x, 0) / a.length; }
+function std(a) { const m=mn(a); return Math.sqrt(a.reduce((s,x) => s+(x-m)**2, 0)/(a.length-1)); }
+function sem(a) { return std(a)/Math.sqrt(a.length); }
+function vr(a) { const m=mn(a); return a.reduce((s,x) => s+(x-m)**2, 0)/(a.length-1); }
+function pct(a, b) { return ((b-a)/a*100).toFixed(1) + '%'; }
+function fmtP(p) { return p < 0.001 ? '< 0.001' : p.toFixed(3); }
+function pv2(a, b) {
+  const na=a.length, nb=b.length, ma=mn(a), mb=mn(b), va=vr(a), vb=vr(b);
+  const se=Math.sqrt(va/na+vb/nb);
+  if (se < 1e-9) return 0.001;
+  const t=Math.abs((ma-mb)/se);
+  const df=Math.round((va/na+vb/nb)**2/((va/na)**2/(na-1)+(vb/nb)**2/(nb-1)));
+  return apP(t, df);
+}
+function apP(t, df) {
+  const x = df/(df+t*t);
+  return Math.min(0.97, Math.max(0.001, 0.5*Math.min(1, ib(x, df/2, 0.5)*1.75)));
+}
+function ib(x, a, b) { if(x<=0) return 0; if(x>=1) return 1; const lb=lg(a)+lg(b)-lg(a+b); return Math.exp(a*Math.log(x)+b*Math.log(1-x)-lb)*0.12; }
+function lg(z) { const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,.001208650973866179,-5.395239384953e-6]; let y=z,t=z+5.5,s=1.000000000190015; t-=(z+.5)*Math.log(t); for(let i=0;i<6;i++) s+=c[i]/++y; return -t+Math.log(2.5066282746310005*s/z); }
+
+// ── UI ──
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function pick(i) {
+  sel = i;
+  document.querySelectorAll('.exp-card').forEach((c, j) => c.classList.toggle('selected', j === i));
+  const btn = document.getElementById('menu-next');
+  btn.disabled = false;
+}
+function goIntro() {
+  if (sel === null) return;
+  const e = EXPS[sel];
+  document.getElementById('intro-body').innerHTML = e.intro;
+  document.getElementById('rq-body').textContent = e.rq;
+  document.getElementById('cite-body').textContent = e.cite;
+  document.getElementById('result-area').style.display = 'none';
+  document.getElementById('run-nav').style.display = 'none';
+  show('s-intro');
+}
+function runExp() {
+  const e = EXPS[sel];
+  const res = e.run();
+  drawChart(res);
+  renderTable(res);
+  document.getElementById('note-text').textContent = res.note;
+  document.getElementById('result-area').style.display = 'block';
+  document.getElementById('run-nav').style.display = 'flex';
+  document.getElementById('run-btn').textContent = 'Re-run experiment';
+}
+
+// ── Chart ──
+function drawChart(res) {
+  const cv = document.getElementById('exp-canvas');
+  const ctx = cv.getContext('2d');
+  const DPR = window.devicePixelRatio || 1;
+  const W = cv.parentElement.clientWidth || 740;
+  const H = 240;
+  cv.width = W * DPR; cv.height = H * DPR;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+  ctx.clearRect(0, 0, W, H);
+
+  if (res.isMultiGene) {
+    drawGrouped(ctx, W, H, res);
+    return;
+  }
+
+  const pad = {l: 64, r: 24, t: 22, b: 50};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const means = res.datasets.map(d => mn(d));
+  const sems_ = res.datasets.map(d => sem(d));
+  const maxV = Math.max(...means.map((m, i) => m + sems_[i])) * 1.3;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(0,0,0,.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch * (1 - i/4);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cw, y); ctx.stroke();
+    ctx.fillStyle = '#9b9890'; ctx.font = '10px IBM Plex Mono, monospace'; ctx.textAlign = 'right';
+    ctx.fillText((maxV*i/4).toFixed(maxV < 5 ? 1 : 0), pad.l - 6, y + 3);
+  }
+  ctx.strokeStyle = 'rgba(0,0,0,.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + ch); ctx.stroke();
+
+  // Bars
+  const bW = Math.min(80, cw / (res.groups.length * 2.5));
+  const sp = (cw - bW * res.groups.length) / (res.groups.length + 1);
+  means.forEach((m, gi) => {
+    const s = sems_[gi];
+    const x = pad.l + sp*(gi+1) + bW*gi;
+    const bH = (m/maxV)*ch, y = pad.t + ch - bH;
+    ctx.fillStyle = res.colors[gi] + '22';
+    ctx.strokeStyle = res.colors[gi]; ctx.lineWidth = 2;
+    ctx.fillRect(x, y, bW, bH); ctx.strokeRect(x, y, bW, bH);
+    // Error bar
+    const eT = pad.t + ch - ((m+s)/maxV)*ch;
+    const eB = pad.t + ch - ((m-s)/maxV)*ch;
+    ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x+bW/2, eT); ctx.lineTo(x+bW/2, eB); ctx.stroke();
+    [[x+bW/2-5, x+bW/2+5, eT],[x+bW/2-5, x+bW/2+5, eB]].forEach(([x1,x2,yy]) => {
+      ctx.beginPath(); ctx.moveTo(x1,yy); ctx.lineTo(x2,yy); ctx.stroke();
+    });
+    // Labels
+    ctx.fillStyle = res.colors[gi]; ctx.font = '11px IBM Plex Sans, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(res.groups[gi], x+bW/2, pad.t+ch+18);
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.font = '10px IBM Plex Mono, monospace';
+    ctx.fillText(m.toFixed(m < 10 ? 1 : 0), x+bW/2, y-6);
+  });
+  // Y label
+  ctx.save(); ctx.fillStyle = '#9b9890'; ctx.font = '10px IBM Plex Mono, monospace'; ctx.textAlign = 'center';
+  ctx.translate(13, pad.t + ch/2); ctx.rotate(-Math.PI/2); ctx.fillText(res.yLbl, 0, 0); ctx.restore();
+}
+
+function drawGrouped(ctx, W, H, res) {
+  const pad = {l: 64, r: 120, t: 22, b: 50};
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const genes = res.allGenes, nv = res.nawmVals, lv = res.lesionVals;
+  const maxV = Math.max(...nv, ...lv) * 1.25;
+  const grpW = cw / genes.length, bW = grpW * 0.28;
+
+  ctx.strokeStyle = 'rgba(0,0,0,.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch*(1-i/4);
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
+    ctx.fillStyle = '#9b9890'; ctx.font = '10px IBM Plex Mono, monospace'; ctx.textAlign = 'right';
+    ctx.fillText((maxV*i/4).toFixed(1), pad.l-6, y+3);
+  }
+  ctx.strokeStyle = 'rgba(0,0,0,.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,pad.t+ch); ctx.stroke();
+
+  genes.forEach((g, i) => {
+    const cx = pad.l + grpW*i + grpW/2;
+    [[nv[i], '#1D9E75', -1],[lv[i], '#E24B4A', 1]].forEach(([val, col, side]) => {
+      const x = cx + side*(bW*0.6) - bW/2;
+      const bH = (val/maxV)*ch, y = pad.t+ch-bH;
+      ctx.fillStyle = col+'25'; ctx.strokeStyle = col; ctx.lineWidth = 1.5;
+      ctx.fillRect(x,y,bW,bH); ctx.strokeRect(x,y,bW,bH);
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.font = '9px IBM Plex Mono, monospace'; ctx.textAlign = 'center';
+      ctx.fillText(val.toFixed(1), x+bW/2, y-4);
+    });
+    ctx.fillStyle = '#1a1916'; ctx.font = '11px IBM Plex Mono, monospace'; ctx.textAlign = 'center';
+    ctx.fillText(g, cx, pad.t+ch+18);
+  });
+  // Legend
+  [['#1D9E75','NAWM'],['#E24B4A','MS lesion']].forEach(([col,lbl], i) => {
+    const lx = W - pad.r + 14, ly = pad.t + 24 + i*20;
+    ctx.fillStyle = col+'30'; ctx.strokeStyle = col; ctx.lineWidth = 1.5;
+    ctx.fillRect(lx, ly, 12, 12); ctx.strokeRect(lx, ly, 12, 12);
+    ctx.fillStyle = '#6b6860'; ctx.font = '11px IBM Plex Sans, sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(lbl, lx+16, ly+9);
+  });
+  ctx.save(); ctx.fillStyle = '#9b9890'; ctx.font = '10px IBM Plex Mono, monospace'; ctx.textAlign = 'center';
+  ctx.translate(13, pad.t+ch/2); ctx.rotate(-Math.PI/2); ctx.fillText(res.yLbl, 0, 0); ctx.restore();
+}
+
+function renderTable(res) {
+  const t = document.getElementById('data-table');
+  t.innerHTML = '';
+  res.tableRows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    row.forEach(cell => {
+      const el = document.createElement(i === 0 ? 'th' : 'td');
+      // mark p-value cells with mono font
+      if (i > 0 && (cell.includes('0.') || cell === '< 0.001')) el.classList.add('pval');
+      el.textContent = cell;
+      tr.appendChild(el);
+    });
+    t.appendChild(tr);
+  });
+}
+
+function restart() {
+  sel = null;
+  document.querySelectorAll('.exp-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('menu-next').disabled = true;
+  show('s-menu');
+}
+</script>
+</body>
+</html>
